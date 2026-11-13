@@ -1239,9 +1239,7 @@ void webusbPoll()
 				case 84:
 				case 85:
 				case 86:
-				case 87:
-				case 88:
-				case 89: {
+				case 87: {
 					uint8_t et = (uint8_t)((f - 80) / 2),
 						pad = (uint8_t)((f - 80) % 2);
 					if (et < ET_COUNT && v <= PS_MAX) {
