@@ -55,7 +55,8 @@ void xinputAuthReset()
 
 void xinputAuthDiagSnapshot(XinputAuthDiagnostics *out)
 {
-	if (!out) return;
+	if (!out)
+		return;
 	uint32_t mask = xinputAuthLock();
 	*out = g_diag;
 	out->currentState = static_cast<uint8_t>(g_state);
@@ -120,8 +121,10 @@ void xinputAuthProcess()
 	mask = xinputAuthLock();
 	if (generation == g_generation) {
 		if (ok) {
-			if (state == AUTH_PENDING_INIT) g_diag.initSuccess++;
-			else g_diag.verifySuccess++;
+			if (state == AUTH_PENDING_INIT)
+				g_diag.initSuccess++;
+			else
+				g_diag.verifySuccess++;
 			g_responseLength = state == AUTH_PENDING_INIT ? 46 : 22;
 			memcpy(g_response, xsm3_challenge_response,
 			       g_responseLength);
