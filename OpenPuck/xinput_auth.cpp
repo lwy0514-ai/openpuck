@@ -16,6 +16,7 @@ enum AuthState : uint8_t {
 };
 
 static volatile AuthState g_state = AUTH_IDLE;
+static XinputAuthDiagnostics g_diag = {};
 static volatile uint32_t g_generation;
 static bool g_workerReady;
 static char g_serial[13];
@@ -38,6 +39,7 @@ bool xinputAuthBusy()
 // callbacks must not attempt to acquire the same lock a second time.
 static void authResetLocked()
 {
+	g_diag.resets++;
 	g_generation++;
 	g_state = AUTH_IDLE;
 	g_responseLength = 0;
@@ -48,6 +50,16 @@ void xinputAuthReset()
 {
 	uint32_t mask = xinputAuthLock();
 	authResetLocked();
+	xinputAuthUnlock(mask);
+}
+
+void xinputAuthDiagSnapshot(XinputAuthDiagnostics *out)
+{
+	if (!out) return;
+	uint32_t mask = xinputAuthLock();
+	*out = g_diag;
+	out->currentState = static_cast<uint8_t>(g_state);
+	out->workerReady = g_workerReady;
 	xinputAuthUnlock(mask);
 }
 
@@ -67,6 +79,11 @@ void xinputAuthPrepare()
 		g_identification[28] ^= g_identification[i];
 	xinputAuthReset();
 	g_workerReady = xinputAuthStartWorker();
+	if (!g_workerReady) {
+		uint32_t mask = xinputAuthLock();
+		g_diag.workerStartFailures++;
+		xinputAuthUnlock(mask);
+	}
 }
 
 void xinputAuthProcess()
@@ -103,6 +120,8 @@ void xinputAuthProcess()
 	mask = xinputAuthLock();
 	if (generation == g_generation) {
 		if (ok) {
+			if (state == AUTH_PENDING_INIT) g_diag.initSuccess++;
+			else g_diag.verifySuccess++;
 			g_responseLength = state == AUTH_PENDING_INIT ? 46 : 22;
 			memcpy(g_response, xsm3_challenge_response,
 			       g_responseLength);
@@ -110,6 +129,7 @@ void xinputAuthProcess()
 					  AUTH_INIT_READY :
 					  AUTH_VERIFY_READY;
 		} else {
+			g_diag.cryptoFailures++;
 			g_responseLength = 0;
 			memset(g_response, 0, sizeof g_response);
 			g_state = AUTH_FAILED;
@@ -154,6 +174,7 @@ bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 		uint32_t mask = xinputAuthLock();
 		switch (command) {
 		case 0x81:
+			g_diag.identifyRequests++;
 			authResetLocked();
 			memcpy(g_control, g_identification,
 			       sizeof g_identification);
@@ -197,8 +218,12 @@ bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 			xinputAuthUnlock(mask);
 			return false;
 		}
-		if (init)
+		if (init) {
+			g_diag.initChallenges++;
 			authResetLocked();
+		} else {
+			g_diag.verifyChallenges++;
+		}
 		g_state = init ? AUTH_RECEIVE_INIT : AUTH_RECEIVE_VERIFY;
 		g_responseLength = 0;
 		memset(g_response, 0, sizeof g_response);
@@ -210,6 +235,7 @@ bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 	if (stage == CONTROL_STAGE_DATA) {
 		uint32_t mask = xinputAuthLock();
 		if (!xinputAuthReceived(request->wLength)) {
+			g_diag.receiveFailures++;
 			g_generation++;
 			g_state = AUTH_FAILED;
 			xinputAuthUnlock(mask);
