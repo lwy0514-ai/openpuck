@@ -448,18 +448,28 @@ static void rfXboxGamepad(uint8_t slot, uint32_t generation, const uint8_t *r)
 		int32_t yaw = gy;
 		int32_t pitch = -gx;
 		const int32_t deadzone = 700;
-		if (yaw > -deadzone && yaw < deadzone) yaw = 0;
-		if (pitch > -deadzone && pitch < deadzone) pitch = 0;
+		if (yaw > -deadzone && yaw < deadzone)
+			yaw = 0;
+		if (pitch > -deadzone && pitch < deadzone)
+			pitch = 0;
 		yaw = (yaw * (int32_t)g_xboxGyroGain) / 4;
 		pitch = (pitch * (int32_t)g_xboxGyroGain) / 4;
-		if (yaw > 32767) yaw = 32767; else if (yaw < -32768) yaw = -32768;
-		if (pitch > 32767) pitch = 32767; else if (pitch < -32768) pitch = -32768;
+		if (yaw > 32767)
+			yaw = 32767;
+		else if (yaw < -32768)
+			yaw = -32768;
+		if (pitch > 32767)
+			pitch = 32767;
+		else if (pitch < -32768)
+			pitch = -32768;
 		int32_t absYaw = yaw < 0 ? -yaw : yaw;
 		int32_t absPitch = pitch < 0 ? -pitch : pitch;
 		int32_t absRx = rx < 0 ? -(int32_t)rx : (int32_t)rx;
 		int32_t absRy = ry < 0 ? -(int32_t)ry : (int32_t)ry;
-		if (absYaw > absRx) rx = (int16_t)yaw;
-		if (absPitch > absRy) ry = (int16_t)pitch;
+		if (absYaw > absRx)
+			rx = (int16_t)yaw;
+		if (absPitch > absRy)
+			ry = (int16_t)pitch;
 	}
 
 	xinputSend(slot, generation, btn, lt, rt, lx, ly, rx, ry);
