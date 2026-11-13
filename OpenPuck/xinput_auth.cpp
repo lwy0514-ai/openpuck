@@ -34,13 +34,20 @@ bool xinputAuthBusy()
 	       state == AUTH_WORKING_INIT || state == AUTH_WORKING_VERIFY;
 }
 
-void xinputAuthReset()
+// Call with the authentication lock already held. In particular, EP0
+// callbacks must not attempt to acquire the same lock a second time.
+static void authResetLocked()
 {
-	uint32_t mask = xinputAuthLock();
 	g_generation++;
 	g_state = AUTH_IDLE;
 	g_responseLength = 0;
 	memset(g_response, 0, sizeof g_response);
+}
+
+void xinputAuthReset()
+{
+	uint32_t mask = xinputAuthLock();
+	authResetLocked();
 	xinputAuthUnlock(mask);
 }
 
@@ -147,7 +154,7 @@ bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 		uint32_t mask = xinputAuthLock();
 		switch (command) {
 		case 0x81:
-			xinputAuthReset();
+			authResetLocked();
 			memcpy(g_control, g_identification,
 			       sizeof g_identification);
 			length = sizeof g_identification;
@@ -191,7 +198,7 @@ bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 			return false;
 		}
 		if (init)
-			xinputAuthReset();
+			authResetLocked();
 		g_state = init ? AUTH_RECEIVE_INIT : AUTH_RECEIVE_VERIFY;
 		g_responseLength = 0;
 		memset(g_response, 0, sizeof g_response);
