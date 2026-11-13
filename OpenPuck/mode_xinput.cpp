@@ -439,6 +439,39 @@ static void rfXboxGamepad(uint8_t slot, uint32_t generation, const uint8_t *r)
 	padStickBlend(b, (int16_t)s16off(r, 16), (int16_t)s16off(r, 18),
 		      (int16_t)s16off(r, 22), (int16_t)s16off(r, 24), &lx, &ly,
 		      &rx, &ry);
+	// Optional gyro aim: convert SC2 yaw/pitch rates into a right-stick contribution.
+	// Default-off; physical stick and configured trackpad mapping remain usable. A small
+	// deadzone rejects sensor noise; clamp avoids overflow and preserves a full-scale axis.
+	if (g_xboxGyroAim) {
+		int32_t gx = (int32_t)s16off(r, 38);
+		int32_t gy = (int32_t)s16off(r, 40);
+		int32_t yaw = gy;
+		int32_t pitch = -gx;
+		const int32_t deadzone = 700;
+		if (yaw > -deadzone && yaw < deadzone)
+			yaw = 0;
+		if (pitch > -deadzone && pitch < deadzone)
+			pitch = 0;
+		yaw = (yaw * (int32_t)g_xboxGyroGain) / 4;
+		pitch = (pitch * (int32_t)g_xboxGyroGain) / 4;
+		if (yaw > 32767)
+			yaw = 32767;
+		else if (yaw < -32768)
+			yaw = -32768;
+		if (pitch > 32767)
+			pitch = 32767;
+		else if (pitch < -32768)
+			pitch = -32768;
+		int32_t absYaw = yaw < 0 ? -yaw : yaw;
+		int32_t absPitch = pitch < 0 ? -pitch : pitch;
+		int32_t absRx = rx < 0 ? -(int32_t)rx : (int32_t)rx;
+		int32_t absRy = ry < 0 ? -(int32_t)ry : (int32_t)ry;
+		if (absYaw > absRx)
+			rx = (int16_t)yaw;
+		if (absPitch > absRy)
+			ry = (int16_t)pitch;
+	}
+
 	xinputSend(slot, generation, btn, lt, rt, lx, ly, rx, ry);
 }
 
