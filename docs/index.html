@@ -305,6 +305,14 @@
       <p class="note">Right-pad cursor in Steam-mode lizard (Steam closed) and in Xbox mode. Sensitivity is a divisor — lower = faster pointer. Glide = how long the cursor coasts after a flick.</p>
     </div>
 
+    <div class="card" id="xboxGyroCard">
+      <h2>Xbox gyro aim (experimental)</h2>
+      <div class="row"><label for="xboxGyroAim">Gyro aim</label><select id="xboxGyroAim"><option value="0">Off (default)</option><option value="1">On</option></select></div>
+      <div class="row"><label for="xboxGyroGain">Sensitivity</label><input type="range" id="xboxGyroGain" min="1" max="12" step="1"><span class="val" id="xboxGyroGainV"></span></div>
+      <p class="note">In Xbox 360 mode, yaw and pitch from the controller's gyro are blended into the right stick. Physical stick and trackpad input remain available. Start low and adjust in-game. This is experimental and does not add gyro to Xbox as a separate sensor.</p>
+      <p id="xboxGyroOld" class="note hide">This firmware does not include Xbox gyro aim settings.</p>
+    </div>
+
     <div class="card">
       <h2>Switch Pro motion</h2>
       <!-- Gyro mapping (firmware >= v19). Older firmware always uses the corrected mapping and has no field
@@ -1359,6 +1367,9 @@ function applyBlob(p){
   // setting at all -> the select hides (see #swGyroMap below). p[51..53] are the reserved bytes that used to
   // carry rumble strength / Switch report rate / Switch gyro scale, all removed settings.
   const gyroMapCap=(p[0]>=19 && p.length>184);
+  const xboxGyroCap=(p[0]>=23 && p.length>196);
+  const xboxGyroAim=xboxGyroCap?p[195]:0;
+  const xboxGyroGain=xboxGyroCap?p[196]:4;
   const swGyroLegacy=gyroMapCap?p[184]:0;
   // Rumble shaping (protocol v21): firmware p[53]/p[195] = payload p[51]/p[193]. Strength is percent/2.
   const rumbleCap=(p[0]>=21 && p.length>193);
@@ -1581,6 +1592,11 @@ function applyBlob(p){
     const ax=s16(54),ay=s16(56),az=s16(58);
     const amag=Math.round(Math.sqrt(ax*ax+ay*ay+az*az));
     $("#stImu").textContent = `a=(${ax}, ${ay}, ${az})  |a|=${amag}`;
+  }
+  { const aim=$("#xboxGyroAim"), gain=$("#xboxGyroGain");
+    $("#xboxGyroCard").style.display=xboxGyroCap?"":"none";
+    $("#xboxGyroOld").classList.toggle("hide", xboxGyroCap);
+    if(xboxGyroCap){ if(document.activeElement!==aim) aim.value=xboxGyroAim; setSlider("xboxGyroGain",xboxGyroGain); }
   }
   { const sel=$("#swGyroMap");
     $("#swGyroMapBlock").classList.toggle("hide", !gyroMapCap);
@@ -2884,6 +2900,9 @@ $("#rumbleTest").onclick=async()=>{ if(dev){ await send([0x16]); log("test rumbl
 $("#rumbleStyle").addEventListener("change", ()=>setField(39, +$("#rumbleStyle").value));
 $("#rumbleScale").addEventListener("change", ()=>setField(22, (+$("#rumbleScale").value)/2));
 $("#swGyroMap").addEventListener("change", ()=>setField(38, +$("#swGyroMap").value));
+$("#xboxGyroAim").addEventListener("change", ()=>setField(88, +$("#xboxGyroAim").value));
+$("#xboxGyroGain").addEventListener("input", ()=>{ $("#xboxGyroGainV").textContent=$("#xboxGyroGain").value; });
+$("#xboxGyroGain").addEventListener("change", ()=>setField(89, +$("#xboxGyroGain").value));
 $("#rfSurvey").onclick=()=>manualSurveyRf();
 $("#rfBuilder").onclick=()=>manualJournalBuilderRf();
 for(const sel of document.querySelectorAll("select.chord")){
