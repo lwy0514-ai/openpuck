@@ -29,6 +29,10 @@ static uint8_t g_debugCdc = 0;
 
 int g_mDiv = 64, g_mFric = 94;
 
+// Optional Xbox gyro-to-right-stick aim. Off preserves the stock button/stick feel.
+uint8_t g_xboxGyroAim = 0;
+uint8_t g_xboxGyroGain = 4;
+
 // Per-type button config. back default {5,6,7,8} = L4->LB R4->RB L5->L3 R5->R3 (0..11 buttons, 12..15 D-pad,
 // 16/17 PS touch/mute, 18 Switch Capture). Switch differs: QAM defaults to Capture(18), A/B swap on, and
 // trackpad haptics off. qamMap 0 = unmapped (hardcoded per-mode behavior). ledBright 0 = no override.
@@ -270,6 +274,15 @@ void loadCfg()
 		}
 		f.close();
 	}
+	// Optional Xbox gyro aim lives in the previously unused config-extension bytes 3 and 4.
+	// 0xFF means an older config file has no value; retain the compiled defaults.
+	uint8_t gyroAim = cfgExtRead(3u);
+	if (gyroAim <= 1u)
+		g_xboxGyroAim = gyroAim;
+	uint8_t gyroGain = cfgExtRead(4u);
+	if (gyroGain >= 1u && gyroGain <= 12u)
+		g_xboxGyroGain = gyroGain;
+
 	// resolve the active emulated type's settings into the live mirrors the mode builders read
 	applyActiveType();
 	// clear the one-shot so the NEXT cold boot reverts to the default/persist policy
