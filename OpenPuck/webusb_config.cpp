@@ -105,7 +105,7 @@ static bool boardCommand(uint8_t op)
 //                [v21: p[53] rumble strength as PERCENT/2 (field 22, revived); p[195] rumble style
 //                 (field 39, RUMBLE_STYLE_* in haptics.h)]
 //                [v22: p[196] RF recovery status/journal transport capability marker (0x52)]
-#define WB_PAYLEN 195
+#define WB_PAYLEN 197
 // The blob send is drop-on-full (never blocks loop), so the vendor TX FIFO MUST be able to hold a whole blob
 // -- otherwise tud_vendor_write_available() never reaches the frame size and EVERY frame is dropped (blank
 // panel / stale mappings). The Makefile sets -DCFG_TUD_VENDOR_TX_BUFSIZE=256; guard it here so a build without
@@ -154,7 +154,7 @@ static void webusbSendBlob()
 	// 7 = +raw accel; 
 	// 6 = +swPro120/gyroScale)
 	// clang-format on
-	p[2] = 22;
+	p[2] = 23;
 	p[3] = g_usbMode;
 	p[4] = (uint8_t)g_mDiv;
 	p[5] = (uint8_t)g_mFric;
@@ -340,6 +340,9 @@ static void webusbSendBlob()
 	// v22: append-only RF recovery transport capability. p[181] remains the
 	// upstream Steam Machine toggle; older RF builds used that byte for 0x52.
 	p[196] = 0x52;
+	// v23: optional Xbox gyro aim enable + gain, append-only payload bytes 195..196.
+	p[197] = g_xboxGyroAim;
+	p[198] = g_xboxGyroGain;
 	// CRITICAL: usb_web.write() SPINS (`while (remain && _connected) yield();`) until the IN FIFO drains or the
 	// panel disconnects. If the panel holds the WebUSB interface open but stops reading its IN endpoint -- a
 	// backgrounded tab, or the host briefly not servicing transferIn under load -- the FIFO never empties and
@@ -1236,7 +1239,9 @@ void webusbPoll()
 				case 84:
 				case 85:
 				case 86:
-				case 87: {
+				case 87:
+				case 88:
+				case 89: {
 					uint8_t et = (uint8_t)((f - 80) / 2),
 						pad = (uint8_t)((f - 80) % 2);
 					if (et < ET_COUNT && v <= PS_MAX) {
@@ -1246,6 +1251,18 @@ void webusbPoll()
 					}
 					break;
 				}
+
+				// Xbox gyro aim: field 88 = enable, field 89 = gain (1..12).
+				case 88:
+					g_xboxGyroAim = v ? 1 : 0;
+					cfgExtWrite(3u, g_xboxGyroAim);
+					break;
+				case 89:
+					if (v >= 1u && v <= 12u) {
+						g_xboxGyroGain = v;
+						cfgExtWrite(4u, v);
+					}
+					break;
 
 				// Host-rumble strength, as PERCENT/2 so the full range fits the
 				// one value byte. Revived in protocol v21; clamped to
