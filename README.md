@@ -152,3 +152,4 @@ Xbox authentication includes InvoxiPlayGames' **libxsm3 (LGPL-2.1-or-later)** an
 Everything from discovery of the protocol to writing the arduino sketch and running various automated benchmarks invovled Claude and Codex. This readme is the only organic, single origin, ethically sourced and humanely slaughtered assemblage of words in this project. I have done my level best to review the code and I invite anyone concerned about the stability or security of this project to do the same. I test thoroughly and obsessively as the primary purpose of this project is to bring some much needed QOL to my own use of the Steam Controller.
 
 I want nothing more than for there to be a fully human coded alternative to OpenPuck that's on par with or better in every way. I would love to stop working on OpenPuck. If someone builds an alternative that matches this criteria I would also happily change the name of this project and archive this repo.
+<!-- build trigger -->
