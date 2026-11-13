@@ -196,6 +196,9 @@ void applyActiveType();
 // it never resets the rest of the config. Set from the WebUSB panel.
 // Switch Pro gyro mapping: 0 = corrected (default, PR #189 sensitivity trim), 1 = legacy (raw, pre-#189)
 extern uint8_t g_swGyroLegacy;
+// Optional Xbox-mode gyro-to-right-stick aim. Disabled by default; gain is a multiplier (1..12).
+extern uint8_t g_xboxGyroAim;
+extern uint8_t g_xboxGyroGain;
 
 // persist g_swGyroLegacy to its flash file
 void swProSaveCfg();
