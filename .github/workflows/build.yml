@@ -91,6 +91,20 @@ jobs:
           mkdir -p build/openpuck build/cache/openpuck
           make build BUILD_PATH=build/cache/openpuck OUTPUT_DIR=build/openpuck
 
+      - name: Compile one-time factory-reset recovery UF2
+        run: |
+          mkdir -p build/recovery build/cache/recovery
+          make build BUILD_PATH=build/cache/recovery OUTPUT_DIR=build/recovery EXTRA_FLAGS="-DOPK_FACTORY_RESET=1"
+          ./gen_uf2.sh build/recovery/OpenPuck.ino.hex build/recovery/OpenPuck.ino.uf2
+
+      - name: Upload factory-reset recovery UF2 artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: OpenPuck-${{ steps.build_version.outputs.artifact_version }}-factory-reset.uf2
+          retention-days: 7
+          if-no-files-found: error
+          path: build/recovery/OpenPuck.ino.uf2
+
       - name: Compile MDBT50Q-CX-40
         run: make build-raytac
 

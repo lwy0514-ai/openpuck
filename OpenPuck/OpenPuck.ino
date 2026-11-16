@@ -1,3 +1,4 @@
+#include "xbox_diag_store.h"
 // OpenPuck.ino -- Steam Controller 2 ("Triton") puck reimplementation for an nRF52840.
 //
 // This firmware impersonates the Valve puck over USB, maintains puck-style bond slots, speaks the
@@ -344,6 +345,7 @@ void loop()
 {
 	// feed the watchdog; if we ever stop, the ~8s WDT auto-resets us
 	NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+	xboxDiagTick(); // persistent Xbox authentication counters (throttled)
 	faultDiagBeat(); // loop heartbeat -- the SOF blob reports ms-since-beat so a wedge is visible live
 	faultDiagStackTick(); // per-task stack headroom (self-gated ~1Hz) -- usbd-overflow hypothesis check
 	faultDiagFlightTick(); // flight recorder: refresh vitals + heartbeat crumb + live CDC vitals line

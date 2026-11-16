@@ -1,0 +1,26 @@
+name: Auto-format diagnostic source
+on:
+  push:
+    branches:
+      - diagnostics/xbox-auth-20261116
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: diagnostics/xbox-auth-20261116
+          persist-credentials: true
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18
+          clang-format-18 -i OpenPuck/serial_console.cpp OpenPuck/xbox_diag_store.cpp OpenPuck/xbox_diag_store.h
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add OpenPuck/serial_console.cpp OpenPuck/xbox_diag_store.cpp OpenPuck/xbox_diag_store.h
+            git commit -m "Apply clang-format 18 to Xbox diagnostics"
+            git push origin HEAD:diagnostics/xbox-auth-20261116
+          fi
