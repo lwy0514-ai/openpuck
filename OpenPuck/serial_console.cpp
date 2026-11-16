@@ -39,7 +39,8 @@ void serialConsolePoll()
 			} else if (!strcmp(line, "XD")) {
 				XboxDiagRecord d = {};
 				if (!xboxDiagRead(&d)) {
-					Serial.println("# XD no saved Xbox authentication log");
+					Serial.println(
+						"# XD no saved Xbox authentication log");
 				} else {
 					Serial.printf(
 						"# XD writes=%lu uptimeMs=%lu setup=%lu recipient=%lu other=%lu init=%lu verify=%lu cryptoFail=%lu resets=%lu lastReq=%02X lastType=%02X state=%u index=%u len=%u\n",
@@ -52,7 +53,8 @@ void serialConsolePoll()
 						(unsigned long)d.auth.verifyCount,
 						(unsigned long)d.auth.cryptoFailures,
 						(unsigned long)d.auth.authResets,
-						d.auth.lastRequest, d.auth.lastRequestType,
+						d.auth.lastRequest,
+						d.auth.lastRequestType,
 						d.auth.state, d.auth.lastIndex,
 						d.auth.lastLength);
 				}
