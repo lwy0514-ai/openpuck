@@ -71,7 +71,8 @@ void xboxDiagTick()
 	File f(InternalFS);
 	if (!f.open(kFile, FILE_O_WRITE))
 		return;
-	const size_t n = f.write(reinterpret_cast<const uint8_t *>(&r), sizeof r);
+	const size_t n =
+		f.write(reinterpret_cast<const uint8_t *>(&r), sizeof r);
 	f.close();
 	if (n == sizeof r) {
 		lastSignature = sig;
