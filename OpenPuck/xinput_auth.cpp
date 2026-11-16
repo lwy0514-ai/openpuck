@@ -17,6 +17,19 @@ enum AuthState : uint8_t {
 
 static volatile AuthState g_state = AUTH_IDLE;
 static volatile uint32_t g_generation;
+static volatile XinputAuthDiag g_authDiag = {};
+// Snapshot is safe to call from a non-USB task. Never print from USB callbacks.
+void xinputAuthDiagSnapshot(XinputAuthDiag *out)
+{
+    if (!out) return;
+    uint32_t mask = xinputAuthLock();
+    const volatile uint8_t *src =
+        reinterpret_cast<const volatile uint8_t *>(&g_authDiag);
+    uint8_t *dst = reinterpret_cast<uint8_t *>(out);
+    for (size_t i = 0; i < sizeof(*out); ++i) dst[i] = src[i];
+    out->state = static_cast<uint8_t>(g_state);
+    xinputAuthUnlock(mask);
+}
 static bool g_workerReady;
 static char g_serial[13];
 static uint8_t g_identification[29];
@@ -36,6 +49,7 @@ bool xinputAuthBusy()
 
 void xinputAuthReset()
 {
+    g_authDiag.authResets++;
 	uint32_t mask = xinputAuthLock();
 	g_generation++;
 	g_state = AUTH_IDLE;
@@ -106,6 +120,7 @@ void xinputAuthProcess()
 			g_responseLength = 0;
 			memset(g_response, 0, sizeof g_response);
 			g_state = AUTH_FAILED;
+            g_authDiag.cryptoFailures++;
 		}
 	}
 	xinputAuthUnlock(mask);
@@ -124,6 +139,15 @@ static bool authRecipient(const tusb_control_request_t *request)
 bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 		       const tusb_control_request_t *request)
 {
+    if (stage == CONTROL_STAGE_SETUP && request) {
+        g_authDiag.setupCount++;
+        if (authRecipient(request)) g_authDiag.recipientCount++;
+        else g_authDiag.otherRecipientCount++;
+        g_authDiag.lastRequest = request->bRequest;
+        g_authDiag.lastRequestType = request->bmRequestType;
+        g_authDiag.lastIndex = request->wIndex;
+        g_authDiag.lastLength = request->wLength;
+    }
 	if (!g_workerReady || !authRecipient(request))
 		return false;
 	bool input = request->bmRequestType & 0x80;
@@ -184,6 +208,8 @@ bool xinputAuthControl(uint8_t rhport, uint8_t stage,
 	if ((!init && command != 0x87) || request->wLength != (init ? 34 : 22))
 		return false;
 	if (stage == CONTROL_STAGE_SETUP) {
+        if (init) g_authDiag.initCount++;
+        else g_authDiag.verifyCount++;
 		uint32_t mask = xinputAuthLock();
 		if (!init && g_state != AUTH_INIT_READY &&
 		    g_state != AUTH_VERIFY_READY) {
