@@ -49,15 +49,15 @@ void serialConsolePoll()
 						(unsigned long)d.uptimeMs,
 						(unsigned long)a.setupCount,
 						(unsigned long)a.recipientCount,
-						(unsigned long)a.otherRecipientCount,
+						(unsigned long)
+							a.otherRecipientCount,
 						(unsigned long)a.initCount,
 						(unsigned long)a.verifyCount,
 						(unsigned long)a.cryptoFailures,
 						(unsigned long)a.authResets,
 						a.lastRequest,
-						a.lastRequestType,
-						a.state, a.lastIndex,
-						a.lastLength);
+						a.lastRequestType, a.state,
+						a.lastIndex, a.lastLength);
 				}
 			} else if (!strcmp(line, "CD")) {
 				// A/B: content dedup on the Steam input forward (drop reports whose body minus the
