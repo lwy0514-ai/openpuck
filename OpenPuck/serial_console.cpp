@@ -42,21 +42,22 @@ void serialConsolePoll()
 					Serial.println(
 						"# XD no saved Xbox authentication log");
 				} else {
+					const XinputAuthDiag &a = d.auth;
 					Serial.printf(
 						"# XD writes=%lu uptimeMs=%lu setup=%lu recipient=%lu other=%lu init=%lu verify=%lu cryptoFail=%lu resets=%lu lastReq=%02X lastType=%02X state=%u index=%u len=%u\n",
 						(unsigned long)d.writes,
 						(unsigned long)d.uptimeMs,
-						(unsigned long)d.auth.setupCount,
-						(unsigned long)d.auth.recipientCount,
-						(unsigned long)d.auth.otherRecipientCount,
-						(unsigned long)d.auth.initCount,
-						(unsigned long)d.auth.verifyCount,
-						(unsigned long)d.auth.cryptoFailures,
-						(unsigned long)d.auth.authResets,
-						d.auth.lastRequest,
-						d.auth.lastRequestType,
-						d.auth.state, d.auth.lastIndex,
-						d.auth.lastLength);
+						(unsigned long)a.setupCount,
+						(unsigned long)a.recipientCount,
+						(unsigned long)a.otherRecipientCount,
+						(unsigned long)a.initCount,
+						(unsigned long)a.verifyCount,
+						(unsigned long)a.cryptoFailures,
+						(unsigned long)a.authResets,
+						a.lastRequest,
+						a.lastRequestType,
+						a.state, a.lastIndex,
+						a.lastLength);
 				}
 			} else if (!strcmp(line, "CD")) {
 				// A/B: content dedup on the Steam input forward (drop reports whose body minus the
