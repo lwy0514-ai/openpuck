@@ -38,14 +38,24 @@ void serialConsolePoll()
 				NVIC_SystemReset();
 			} else if (!strcmp(line, "XD")) {
 				XboxDiagRecord d = {};
-				if (!xboxDiagRead(&d)) Serial.println("# XD no saved Xbox authentication log");
-				else Serial.printf("# XD writes=%lu uptimeMs=%lu setup=%lu recipient=%lu other=%lu init=%lu verify=%lu cryptoFail=%lu resets=%lu lastReq=%02X lastType=%02X state=%u index=%u len=%u\n",
-				(unsigned long)d.writes, (unsigned long)d.uptimeMs,
-				(unsigned long)d.auth.setupCount, (unsigned long)d.auth.recipientCount,
-				(unsigned long)d.auth.otherRecipientCount, (unsigned long)d.auth.initCount,
-				(unsigned long)d.auth.verifyCount, (unsigned long)d.auth.cryptoFailures,
-				(unsigned long)d.auth.authResets, d.auth.lastRequest,
-				d.auth.lastRequestType, d.auth.state, d.auth.lastIndex, d.auth.lastLength);
+				if (!xboxDiagRead(&d)) {
+					Serial.println("# XD no saved Xbox authentication log");
+				} else {
+					Serial.printf(
+						"# XD writes=%lu uptimeMs=%lu setup=%lu recipient=%lu other=%lu init=%lu verify=%lu cryptoFail=%lu resets=%lu lastReq=%02X lastType=%02X state=%u index=%u len=%u\n",
+						(unsigned long)d.writes,
+						(unsigned long)d.uptimeMs,
+						(unsigned long)d.auth.setupCount,
+						(unsigned long)d.auth.recipientCount,
+						(unsigned long)d.auth.otherRecipientCount,
+						(unsigned long)d.auth.initCount,
+						(unsigned long)d.auth.verifyCount,
+						(unsigned long)d.auth.cryptoFailures,
+						(unsigned long)d.auth.authResets,
+						d.auth.lastRequest, d.auth.lastRequestType,
+						d.auth.state, d.auth.lastIndex,
+						d.auth.lastLength);
+				}
 			} else if (!strcmp(line, "CD")) {
 				// A/B: content dedup on the Steam input forward (drop reports whose body minus the
 				// free-running counter is unchanged) -- caps delivered rate at the controller's real
