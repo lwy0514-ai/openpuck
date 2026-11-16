@@ -1,6 +1,14 @@
 #pragma once
 #include <Adafruit_TinyUSB.h>
 
+// Diagnostic metadata only: never retain authentication keys or payloads.
+struct XinputAuthDiag {
+    uint32_t setupCount, recipientCount, otherRecipientCount;
+    uint32_t initCount, verifyCount, cryptoFailures, authResets;
+    uint8_t lastRequest, lastRequestType, state;
+    uint16_t lastIndex, lastLength;
+};
+void xinputAuthDiagSnapshot(XinputAuthDiag *out);
 void xinputAuthPrepare();
 void xinputAuthReset();
 const char *xinputAuthSerial();
